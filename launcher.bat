@@ -62,6 +62,9 @@ timeout /t 8 /nobreak >nul
 echo Starting service-account (8082)...
 start "service-account (8082)" cmd /k "pushd %PROJECT_DIR% && gradlew.bat :service-account:bootRun"
 timeout /t 8 /nobreak >nul
+echo Starting service-balance (8083)...
+start "service-balance (8083)" cmd /k "pushd %PROJECT_DIR% && gradlew.bat :service-balance:bootRun"
+timeout /t 8 /nobreak >nul
 echo Starting api-gateway (8080)...
 start "api-gateway (8080)" cmd /k "pushd %PROJECT_DIR% && gradlew.bat :api-gateway:bootRun"
 echo.
@@ -90,6 +93,9 @@ netstat -ano | findstr :8081 | findstr LISTENING
 echo.
 echo Port 8082 (Account Service):
 netstat -ano | findstr :8082 | findstr LISTENING
+echo.
+echo Port 8083 (Balance Service):
+netstat -ano | findstr :8083 | findstr LISTENING
 echo.
 pause
 goto MENU

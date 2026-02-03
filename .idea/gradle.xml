@@ -8,6 +8,16 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/api-gateway" />
+            <option value="$PROJECT_DIR$/common-domain" />
+            <option value="$PROJECT_DIR$/common-encrypt" />
+            <option value="$PROJECT_DIR$/common-exception" />
+            <option value="$PROJECT_DIR$/service-account" />
+            <option value="$PROJECT_DIR$/service-auth" />
+            <option value="$PROJECT_DIR$/service-balance" />
+            <option value="$PROJECT_DIR$/service-fee" />
+            <option value="$PROJECT_DIR$/service-transaction" />
+            <option value="$PROJECT_DIR$/service-transfer" />
           </set>
         </option>
       </GradleProjectSettings>
