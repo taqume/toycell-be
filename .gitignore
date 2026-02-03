@@ -41,3 +41,26 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Application Properties with Sensitive Data ###
+**/application-local.properties
+**/application-prod.properties
+.env
+
+### Logs ###
+*.log
+logs/
+
+### Temporary Files ###
+*.tmp
+*.bak
+*.swp
+*~
+
+### Database ###
+*.db
+*.sqlite
+database/01-create-schemas.sql
+
+### Helper Scripts (Not needed in repo) ###
+run-*.bat

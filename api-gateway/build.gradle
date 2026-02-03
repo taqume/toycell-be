@@ -2,10 +2,13 @@ dependencies {
     // Spring Cloud Gateway (uses WebFlux, not Web MVC)
     implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
     
+    // Spring Security WebFlux (for reactive security)
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    
     // Spring Boot Actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     
-    // JWT for validation
+    // JWT for validation (optional, for future use)
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'

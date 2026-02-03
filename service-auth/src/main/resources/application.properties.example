@@ -1,0 +1,26 @@
+spring.application.name=service-auth
+server.port=8081
+
+# Oracle Database Configuration
+spring.datasource.url=jdbc:oracle:thin:@localhost:1521:XE
+spring.datasource.username=TOYCELL_AUTH
+spring.datasource.password=${DB_PASSWORD_AUTH:ToyAuth2026!}
+spring.datasource.driver-class-name=oracle.jdbc.OracleDriver
+
+# JPA Configuration
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.OracleDialect
+spring.jpa.database-platform=org.hibernate.dialect.OracleDialect
+
+# Enable JPA Auditing
+spring.jpa.properties.hibernate.enable_lazy_load_no_trans=true
+
+# JWT Configuration
+jwt.secret.key=${JWT_SECRET_KEY:ToycellJwtSecretKeyForAuthenticationMustBe256BitsLong123456789012}
+jwt.expiration.ms=86400000
+
+# Logging
+logging.level.com.toycell=DEBUG
+logging.level.org.hibernate.SQL=DEBUG
