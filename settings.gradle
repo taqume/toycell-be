@@ -1,0 +1,17 @@
+rootProject.name = 'toycell-backend'
+
+// Shared Libraries
+include 'common-domain'
+include 'common-exception'
+include 'common-encrypt'
+
+// Microservices
+include 'service-auth'
+include 'service-account'
+include 'service-balance'
+include 'service-fee'
+include 'service-transfer'
+include 'service-transaction'
+
+// API Gateway
+include 'api-gateway'

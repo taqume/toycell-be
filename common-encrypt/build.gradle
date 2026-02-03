@@ -1,0 +1,10 @@
+dependencies {
+    // Spring Boot for configuration properties
+    implementation 'org.springframework.boot:spring-boot-starter'
+    
+    // JPA for AttributeConverter
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    
+    // Dependency on common-exception
+    implementation project(':common-exception')
+}

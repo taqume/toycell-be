@@ -1,0 +1,88 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.2' apply false
+    id 'io.spring.dependency-management' version '1.1.6' apply false
+}
+
+group = 'com.toycell'
+version = '1.0-SNAPSHOT'
+
+// Java version for all modules
+subprojects {
+    apply plugin: 'java'
+
+    group = 'com.toycell'
+    version = '1.0-SNAPSHOT'
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    // Common dependencies for ALL modules
+    dependencies {
+        // Lombok
+        compileOnly 'org.projectlombok:lombok:1.18.30'
+        annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+        // Testing
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'org.junit.jupiter:junit-jupiter'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+}
+
+// Apply dependency management to all subprojects
+configure(subprojects) {
+    apply plugin: 'io.spring.dependency-management'
+    
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.boot:spring-boot-dependencies:3.4.2"
+        }
+    }
+}
+
+// Configuration for service modules only (exclude common libs from bootJar task)
+configure(subprojects.findAll { 
+    it.name.startsWith('service-') || it.name == 'api-gateway' 
+}) {
+    apply plugin: 'org.springframework.boot'
+
+    // Only add web starter for services, not gateway
+    if (!it.name.equals('api-gateway')) {
+        dependencies {
+            implementation 'org.springframework.boot:spring-boot-starter-web'
+            implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        }
+    } else {
+        dependencies {
+            implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        }
+    }
+}
+
+// Configuration for common library modules (plain JAR, not bootJar)
+configure(subprojects.findAll { 
+    it.name.startsWith('common-') 
+}) {
+    // Disable Spring Boot plugin tasks for library modules
+    tasks.matching { it.name == 'bootJar' }.configureEach {
+        enabled = false
+    }
+    tasks.matching { it.name == 'jar' }.configureEach {
+        enabled = true
+    }
+}
