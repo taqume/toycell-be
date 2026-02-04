@@ -12,9 +12,11 @@ echo.
 echo  1. Start service-auth (Port 8081)
 echo  2. Start service-account (Port 8082)
 echo  3. Start api-gateway (Port 8080)
-echo  4. Start ALL services
-echo  5. Stop all services
-echo  6. Check port status
+echo  4. Start service-balance (Port 8083)
+echo  5. Start service-fee (Port 8084)
+echo  6. Start ALL services
+echo  7. Stop all services
+echo  8. Check port status
 echo  0. Exit
 echo.
 echo ========================================
@@ -23,9 +25,11 @@ set /p choice="Enter your choice: "
 if "%choice%"=="1" goto AUTH
 if "%choice%"=="2" goto ACCOUNT
 if "%choice%"=="3" goto GATEWAY
-if "%choice%"=="4" goto ALL
-if "%choice%"=="5" goto STOP
-if "%choice%"=="6" goto STATUS
+if "%choice%"=="4" goto BALANCE
+if "%choice%"=="5" goto FEE
+if "%choice%"=="6" goto ALL
+if "%choice%"=="7" goto STOP
+if "%choice%"=="8" goto STATUS
 if "%choice%"=="0" exit
 goto MENU
 
@@ -40,6 +44,20 @@ goto MENU
 echo.
 echo Starting service-account on port 8082...
 start "service-account (8082)" cmd /k "pushd %PROJECT_DIR% && gradlew.bat :service-account:bootRun"
+timeout /t 2 /nobreak >nul
+goto MENU
+
+:BALANCE
+echo.
+echo Starting service-balance on port 8083...
+start "service-balance (8083)" cmd /k "pushd %PROJECT_DIR% && gradlew.bat :service-balance:bootRun"
+timeout /t 2 /nobreak >nul
+goto MENU
+
+:FEE
+echo.
+echo Starting service-fee on port 8084...
+start "service-fee (8084)" cmd /k "pushd %PROJECT_DIR% && gradlew.bat :service-fee:bootRun"
 timeout /t 2 /nobreak >nul
 goto MENU
 
@@ -64,6 +82,9 @@ start "service-account (8082)" cmd /k "pushd %PROJECT_DIR% && gradlew.bat :servi
 timeout /t 8 /nobreak >nul
 echo Starting service-balance (8083)...
 start "service-balance (8083)" cmd /k "pushd %PROJECT_DIR% && gradlew.bat :service-balance:bootRun"
+timeout /t 8 /nobreak >nul
+echo Starting service-fee (8084)...
+start "service-fee (8084)" cmd /k "pushd %PROJECT_DIR% && gradlew.bat :service-fee:bootRun"
 timeout /t 8 /nobreak >nul
 echo Starting api-gateway (8080)...
 start "api-gateway (8080)" cmd /k "pushd %PROJECT_DIR% && gradlew.bat :api-gateway:bootRun"
@@ -96,6 +117,9 @@ netstat -ano | findstr :8082 | findstr LISTENING
 echo.
 echo Port 8083 (Balance Service):
 netstat -ano | findstr :8083 | findstr LISTENING
+echo.
+echo Port 8084 (Fee Service):
+netstat -ano | findstr :8084 | findstr LISTENING
 echo.
 pause
 goto MENU
