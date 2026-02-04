@@ -14,10 +14,11 @@ echo  2. Start service-account (Port 8082)
 echo  3. Start service-balance (Port 8083)
 echo  4. Start service-fee (Port 8084)
 echo  5. Start service-transaction (Port 8086)
-echo  6. Start api-gateway (Port 8080)
-echo  7. Start ALL services
-echo  8. Stop all services
-echo  9. Check port status
+echo  6. Start service-transfer (Port 8087)
+echo  7. Start api-gateway (Port 8080)
+echo  8. Start ALL services
+echo  9. Stop all services
+echo  A. Check port status
 echo  0. Exit
 echo.
 echo ========================================
@@ -28,10 +29,11 @@ if "%choice%"=="2" goto ACCOUNT
 if "%choice%"=="3" goto BALANCE
 if "%choice%"=="4" goto FEE
 if "%choice%"=="5" goto TRANSACTION
-if "%choice%"=="6" goto GATEWAY
-if "%choice%"=="7" goto ALL
-if "%choice%"=="8" goto STOP
-if "%choice%"=="9" goto STATUS
+if "%choice%"=="6" goto TRANSFER
+if "%choice%"=="7" goto GATEWAY
+if "%choice%"=="8" goto ALL
+if "%choice%"=="9" goto STOP
+if /i "%choice%"=="A" goto STATUS
 if "%choice%"=="0" exit
 goto MENU
 
@@ -70,6 +72,13 @@ start "service-transaction (8086)" cmd /k "pushd %PROJECT_DIR% && gradlew.bat :s
 timeout /t 2 /nobreak >nul
 goto MENU
 
+:TRANSFER
+echo.
+echo Starting service-transfer on port 8087...
+start "service-transfer (8087)" cmd /k "pushd %PROJECT_DIR% && gradlew.bat :service-transfer:bootRun"
+timeout /t 2 /nobreak >nul
+goto MENU
+
 :GATEWAY
 echo.
 echo Starting api-gateway on port 8080...
@@ -97,6 +106,9 @@ start "service-fee (8084)" cmd /k "pushd %PROJECT_DIR% && gradlew.bat :service-f
 timeout /t 8 /nobreak >nul
 echo Starting service-transaction (8086)...
 start "service-transaction (8086)" cmd /k "pushd %PROJECT_DIR% && gradlew.bat :service-transaction:bootRun"
+timeout /t 8 /nobreak >nul
+echo Starting service-transfer (8087)...
+start "service-transfer (8087)" cmd /k "pushd %PROJECT_DIR% && gradlew.bat :service-transfer:bootRun"
 timeout /t 8 /nobreak >nul
 echo Starting api-gateway (8080)...
 start "api-gateway (8080)" cmd /k "pushd %PROJECT_DIR% && gradlew.bat :api-gateway:bootRun"
@@ -135,6 +147,9 @@ netstat -ano | findstr :8084 | findstr LISTENING
 echo.
 echo Port 8086 (Transaction Service):
 netstat -ano | findstr :8086 | findstr LISTENING
+echo.
+echo Port 8087 (Transfer Service):
+netstat -ano | findstr :8087 | findstr LISTENING
 echo.
 pause
 goto MENU
