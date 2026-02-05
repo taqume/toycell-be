@@ -34,7 +34,7 @@ public class TransferService {
 
         // 1. Validate wallets
         WalletResponse senderWallet = validateAndGetWallet(request.getSenderWalletId());
-        WalletResponse receiverWallet = validateAndGetWallet(request.getReceiverWalletId());
+        WalletResponse receiverWallet = validateAndGetWalletInternal(request.getReceiverWalletId());
 
         // 2. Validate sender owns the wallet
         if (!senderWallet.getUserId().equals(senderUserId)) {
@@ -154,6 +154,21 @@ public class TransferService {
         }
     }
 
+    private WalletResponse validateAndGetWalletInternal(Long walletId) {
+        try {
+            var response = balanceClient.getWalletInternal(walletId);
+            if (!response.isSuccess() || response.getData() == null) {
+                throw new BusinessException(ErrorCode.WALLET_NOT_FOUND);
+            }
+            return response.getData();
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to get wallet {}: {}", walletId, e.getMessage());
+            throw new BusinessException(ErrorCode.WALLET_NOT_FOUND);
+        }
+    }
+
     private FeeResponse calculateFee(BigDecimal amount, com.toycell.commondomain.enums.Currency currency) {
         try {
             var response = feeClient.calculateTransferFee(amount, currency);
@@ -202,7 +217,8 @@ public class TransferService {
                     .description(description)
                     .build();
 
-            var response = balanceClient.deposit(depositRequest);
+            // Use internal endpoint for receiver wallet (no authentication needed)
+            var response = balanceClient.depositInternal(depositRequest);
             if (!response.isSuccess() || response.getData() == null) {
                 throw new BusinessException(ErrorCode.TRANSFER_FAILED);
             }

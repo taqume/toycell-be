@@ -94,4 +94,27 @@ public class WalletController {
     public ResponseEntity<ApiResponse<String>> health() {
         return ResponseEntity.ok(ApiResponse.success("Balance Service is running"));
     }
+
+    // Internal endpoints for service-to-service communication
+    @GetMapping("/internal/{walletId}")
+    public ResponseEntity<ApiResponse<WalletResponse>> getWalletInternal(@PathVariable Long walletId) {
+        WalletResponse wallet = walletService.getWalletInternal(walletId);
+        return ResponseEntity.ok(ApiResponse.success("Wallet retrieved successfully", wallet));
+    }
+
+    @PostMapping("/internal/deposit")
+    public ResponseEntity<ApiResponse<TransactionResponse>> depositInternal(
+            @Valid @RequestBody DepositRequest request) {
+        TransactionResponse transaction = walletService.depositInternal(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Deposit successful", transaction));
+    }
+
+    @PostMapping("/internal/withdraw")
+    public ResponseEntity<ApiResponse<TransactionResponse>> withdrawInternal(
+            @Valid @RequestBody WithdrawRequest request) {
+        TransactionResponse transaction = walletService.withdrawInternal(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Withdrawal successful", transaction));
+    }
 }

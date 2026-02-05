@@ -102,6 +102,18 @@ public class FeeController {
     }
 
     /**
+     * Transfer ücreti hesaplar (GET version for Feign)
+     */
+    @GetMapping("/calculate/transfer")
+    public ResponseEntity<ApiResponse<FeeCalculationResponse>> calculateTransferFee(
+            @RequestParam java.math.BigDecimal amount,
+            @RequestParam Currency currency) {
+        FeeCalculationRequest request = new FeeCalculationRequest(amount, currency);
+        FeeCalculationResponse response = feeService.calculateFee(request);
+        return ResponseEntity.ok(ApiResponse.success("Fee calculated successfully", response));
+    }
+
+    /**
      * Health check
      */
     @GetMapping("/health")

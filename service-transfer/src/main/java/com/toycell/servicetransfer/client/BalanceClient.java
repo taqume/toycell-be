@@ -17,9 +17,18 @@ public interface BalanceClient {
     @GetMapping("/api/wallets/{walletId}")
     ApiResponse<WalletResponse> getWallet(@PathVariable("walletId") Long walletId);
 
+    @GetMapping("/api/wallets/internal/{walletId}")
+    ApiResponse<WalletResponse> getWalletInternal(@PathVariable("walletId") Long walletId);
+
     @PostMapping("/api/wallets/deposit")
     ApiResponse<WalletResponse> deposit(@RequestBody DepositRequest request);
 
     @PostMapping("/api/wallets/withdraw")
     ApiResponse<WalletResponse> withdraw(@RequestBody WithdrawRequest request);
+
+    @PostMapping("/api/wallets/internal/deposit")
+    ApiResponse<WalletResponse> depositInternal(@RequestBody DepositRequest request);
+
+    @PostMapping("/api/wallets/internal/withdraw")
+    ApiResponse<WalletResponse> withdrawInternal(@RequestBody WithdrawRequest request);
 }

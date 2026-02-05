@@ -162,6 +162,83 @@ public class WalletService {
                 .map(this::mapToTransactionResponse);
     }
 
+    // Internal methods for service-to-service communication (no user authentication required)
+    @Transactional(readOnly = true)
+    public WalletResponse getWalletInternal(Long walletId) {
+        Wallet wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.WALLET_NOT_FOUND));
+
+        return mapToResponse(wallet);
+    }
+
+    @Transactional
+    public TransactionResponse depositInternal(DepositRequest request) {
+        Wallet wallet = walletRepository.findById(request.getWalletId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.WALLET_NOT_FOUND));
+
+        if (!wallet.getActive()) {
+            throw new BusinessException(ErrorCode.WALLET_INACTIVE);
+        }
+
+        BigDecimal balanceBefore = wallet.getBalance();
+        BigDecimal balanceAfter = balanceBefore.add(request.getAmount());
+        wallet.setBalance(balanceAfter);
+        walletRepository.save(wallet);
+
+        BalanceTransaction transaction = BalanceTransaction.builder()
+                .walletId(wallet.getId())
+                .userId(wallet.getUserId())
+                .type(BalanceTransaction.TransactionType.DEPOSIT)
+                .amount(request.getAmount())
+                .balanceBefore(balanceBefore)
+                .balanceAfter(balanceAfter)
+                .currency(wallet.getCurrency())
+                .description(request.getDescription())
+                .referenceId(generateReferenceId())
+                .build();
+
+        transaction = transactionRepository.save(transaction);
+        log.info("Internal deposit: {} to wallet {}, new balance: {}", request.getAmount(), wallet.getId(), balanceAfter);
+
+        return mapToTransactionResponse(transaction);
+    }
+
+    @Transactional
+    public TransactionResponse withdrawInternal(WithdrawRequest request) {
+        Wallet wallet = walletRepository.findById(request.getWalletId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.WALLET_NOT_FOUND));
+
+        if (!wallet.getActive()) {
+            throw new BusinessException(ErrorCode.WALLET_INACTIVE);
+        }
+
+        if (wallet.getBalance().compareTo(request.getAmount()) < 0) {
+            throw new BusinessException(ErrorCode.INSUFFICIENT_BALANCE);
+        }
+
+        BigDecimal balanceBefore = wallet.getBalance();
+        BigDecimal balanceAfter = balanceBefore.subtract(request.getAmount());
+        wallet.setBalance(balanceAfter);
+        walletRepository.save(wallet);
+
+        BalanceTransaction transaction = BalanceTransaction.builder()
+                .walletId(wallet.getId())
+                .userId(wallet.getUserId())
+                .type(BalanceTransaction.TransactionType.WITHDRAW)
+                .amount(request.getAmount())
+                .balanceBefore(balanceBefore)
+                .balanceAfter(balanceAfter)
+                .currency(wallet.getCurrency())
+                .description(request.getDescription())
+                .referenceId(generateReferenceId())
+                .build();
+
+        transaction = transactionRepository.save(transaction);
+        log.info("Internal withdraw: {} from wallet {}, new balance: {}", request.getAmount(), wallet.getId(), balanceAfter);
+
+        return mapToTransactionResponse(transaction);
+    }
+
     private WalletResponse mapToResponse(Wallet wallet) {
         return WalletResponse.builder()
                 .id(wallet.getId())

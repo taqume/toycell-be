@@ -1,276 +1,65 @@
-# 🏦 Toycell Backend - Digital Wallet Fintech Application
+# 🏦 Toycell Backend - Dijital Cüzdan Fintech Uygulaması
 
 [![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://www.oracle.com/java/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.2-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![Gradle](https://img.shields.io/badge/Gradle-8.10.2-blue.svg)](https://gradle.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.2-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Gradle](https://img.shields.io/badge/Gradle-8.x-blue.svg)](https://gradle.org/)
 [![Oracle](https://img.shields.io/badge/Oracle-21c%20XE-red.svg)](https://www.oracle.com/database/technologies/xe-downloads.html)
 
-## 📋 Quick Start
+## 📖 Proje Hakkında
 
-### Prerequisites
-- Java 17 (Amazon Corretto)
-- Oracle 21c XE
-- DBeaver (recommended for database management)
+Toycell Backend, **mikroservis mimarisi** ile geliştirilmiş kapsamlı bir dijital cüzdan ve fintech uygulamasıdır. Kullanıcıların para yatırma, çekme, transfer işlemleri yapabildiği, komisyon hesaplama ve işlem geçmişi takibi yapılabilen güvenli bir platform sunar.
 
-### 1. Database Setup
+### 🎯 Temel Özellikler
 
-**⚠️ IMPORTANT: Database setup file is not in repository for security reasons**
+- ✅ **Kullanıcı Yönetimi**: Kayıt, giriş, profil oluşturma ve KYC doğrulama
+- 💼 **Dijital Cüzdan**: Çoklu para birimi desteği (TRY, USD, EUR)
+- 💸 **Para İşlemleri**: Yatırma (deposit), çekme (withdraw), transfer
+- 📊 **Komisyon Sistemi**: İşlem tipine ve tutara göre dinamik komisyon hesaplama
+- 📜 **İşlem Geçmişi**: Detaylı transaction kayıtları ve sayfalama desteği
+- 🔒 **Güvenlik**: JWT tabanlı kimlik doğrulama, AES-256 şifreleme
 
-Create schemas manually in DBeaver:
+### 🏗️ Mimari Yapı
 
-```sql
--- Connect as SYSTEM user and execute:
+Proje mikroservis mimarisi kullanır ve 7 ana servisten oluşur:
 
-CREATE USER TOYCELL_AUTH IDENTIFIED BY "YourPassword1";
-GRANT CONNECT, RESOURCE TO TOYCELL_AUTH;
-GRANT CREATE SESSION TO TOYCELL_AUTH;
-GRANT CREATE TABLE TO TOYCELL_AUTH;
-GRANT CREATE SEQUENCE TO TOYCELL_AUTH;
-GRANT CREATE VIEW TO TOYCELL_AUTH;
-ALTER USER TOYCELL_AUTH QUOTA UNLIMITED ON USERS;
-
-CREATE USER TOYCELL_ACCOUNT IDENTIFIED BY "YourPassword2";
-GRANT CONNECT, RESOURCE TO TOYCELL_ACCOUNT;
-GRANT CREATE SESSION TO TOYCELL_ACCOUNT;
-GRANT CREATE TABLE TO TOYCELL_ACCOUNT;
-GRANT CREATE SEQUENCE TO TOYCELL_ACCOUNT;
-GRANT CREATE VIEW TO TOYCELL_ACCOUNT;
-ALTER USER TOYCELL_ACCOUNT QUOTA UNLIMITED ON USERS;
-
--- Repeat for: TOYCELL_BALANCE, TOYCELL_FEE, TOYCELL_TRANSFER, TOYCELL_TRANSACTION
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      API Gateway :8080                       │
+└──────────────┬──────────────────────────────────────────────┘
+               │
+    ┌──────────┼──────────┬──────────┬──────────┬─────────┐
+    │          │          │          │          │         │
+┌───▼───┐  ┌──▼───┐  ┌───▼───┐  ┌──▼───┐  ┌───▼────┐ ┌──▼────┐
+│ Auth  │  │Account│ │Balance│  │ Fee  │  │Transfer│ │Transaction│
+│ :8081 │  │ :8082 │ │ :8083 │  │:8084 │  │ :8087  │ │ :8086 │
+└───────┘  └───────┘ └───────┘  └──────┘  └────────┘ └───────┘
 ```
 
-### 2. Environment Variables Setup
+## 📦 Servisler ve Endpointler
 
-Copy and configure environment variables:
+### 🔐 Service-Auth (Port 8081)
+**Görev**: Kullanıcı kimlik doğrulama ve JWT token yönetimi
 
-```cmd
-# Windows CMD
-copy .env.example .env
-# Edit .env with your actual passwords
+| Method | Endpoint | Açıklama | Auth Gerekli |
+|--------|----------|----------|--------------|
+| POST | `/api/auth/register` | Yeni kullanıcı kaydı | ❌ |
+| POST | `/api/auth/login` | Kullanıcı girişi ve token alma | ❌ |
+| GET | `/actuator/health` | Servis sağlık kontrolü | ❌ |
 
-# Set environment variables
-set DB_PASSWORD_AUTH=YourPassword1
-set DB_PASSWORD_ACCOUNT=YourPassword2
-set JWT_SECRET_KEY=YourJWTSecretAtLeast32CharsLong
-set ENCRYPTION_SECRET_KEY=YourEncryptionKey32BytesLong_
-```
+**Request Örnekleri:**
 
-**⚠️ Never commit .env file to git!**
-
-### 3. Running Services
-
-```cmd
-launcher.bat
-# Choose option 4 to start all services
-```
-
-Services will be available at:
-- **API Gateway**: http://localhost:8080
-- **Auth Service**: http://localhost:8081
-- **Account Service**: http://localhost:8082
-
-### 4. Test API
-
-```http
-POST http://localhost:8080/api/auth/register
-Content-Type: application/json
-
+```json
+// POST /api/auth/register
 {
-  "username": "test123",
-  "email": "test@toycell.com",
+  "username": "testuser",
+  "email": "test@example.com",
   "password": "Test123!"
 }
-```
 
----
-
-## 🔒 Security Notes
-
-### Why Environment Variables?
-
-1. **Never commit passwords to Git** - Environment variables keep secrets out of version control
-2. **Different passwords per environment** - Dev, staging, production can have different credentials
-3. **Easy rotation** - Change passwords without modifying code
-4. **Team security** - Each developer uses their own local passwords
-
-### Default Values (INSECURE!)
-
-Files like `application.properties` have placeholder values (`CHANGE_ME`). These will cause errors if you don't set environment variables - **this is intentional for security!**
-
-**DO:**
-- Set environment variables before running services
-- Use strong, unique passwords (minimum 12 characters)
-- Keep `.env` file in `.gitignore`
-
-**DON'T:**
-- Commit real passwords to Git
-- Use default/example passwords in production
-- Share your `.env` file with others
-
----
-
-## 📦 Project Structure
-
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| Java | 17 (Amazon Corretto) | Programming Language |
-| Spring Boot | 3.4.2 | Application Framework |
-| Spring Cloud Gateway | 2023.0.0 | API Gateway |
-| Spring Cloud OpenFeign | - | Service Communication |
-| Spring Data JPA | - | Data Access Layer |
-| Spring Security | - | Authentication & Authorization |
-| Oracle Database | 21c XE | Relational Database |
-| Gradle | 8.10.2 | Build Tool |
-| Lombok | 1.18.30 | Boilerplate Code Reduction |
-| JJWT | 0.12.3 | JWT Token Management |
-
----
-
-## 📦 Microservices
-
-### 🔐 service-auth (Port 8081)
-- User registration & login
-- JWT token generation
-- Password hashing with BCrypt
-
-**Endpoints:**
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login and get JWT token
-- `GET /api/auth/health` - Health check
-
-### 👤 service-account (Port 8082)
-- User profile management
-- **Encrypted fields:** Identity Number (TCKN), Phone Number
-- Profile CRUD operations
-
-**Endpoints:**
-- `POST /api/profiles` - Create profile (requires JWT)
-- `GET /api/profiles/me` - Get my profile
-- `PUT /api/profiles/me` - Update my profile
-
-### 💰 service-balance (Port 8083)
-- Wallet management per currency (TRY, USD, EUR)
-- Atomic balance adjustments
-- Optimistic locking for concurrency
-
-**Endpoints:**
-- *(To be implemented in next phase)*
-
-### 💵 service-fee (Port 8084)
-- Dynamic fee calculation based on rules
-- Support for fixed and percentage fees
-
-**Endpoints:**
-- *(To be implemented in next phase)*
-
-### 🔄 service-transfer (Port 8085)
-- Orchestrates money transfers between users
-- **Manual compensation logic** for rollback scenarios
-- Calls: Balance, Fee, Transaction services via OpenFeign
-
-**Endpoints:**
-- *(To be implemented in next phase)*
-
-### 📜 service-transaction (Port 8086)
-- Transaction history logging
-- Paginated transaction queries
-
-**Endpoints:**
-- *(To be implemented in next phase)*
-
-### 🌐 api-gateway (Port 8080)
-- Single entry point for all client requests
-- Route configuration to microservices
-- CORS handling
-
----
-
-## 📂 Module Structure
-
-```
-toycell-backend/
-├── common-domain/          # Shared entities, enums, response wrappers
-├── common-exception/       # Global exception handling
-├── common-encrypt/         # AES-256-CBC encryption utilities
-├── service-auth/           # Authentication service
-├── service-account/        # Account management service
-├── service-balance/        # Wallet service
-├── service-fee/            # Fee calculation service
-├── service-transfer/       # Transfer orchestration service
-├── service-transaction/    # Transaction history service
-├── api-gateway/            # Spring Cloud Gateway
-└── database/               # SQL scripts for schema setup
-```
-
----
-
-## 🛠️ Setup Instructions
-
-### Prerequisites
-
-- **JDK 17** (Amazon Corretto recommended)
-- **Gradle 8.10.2** (included via wrapper)
-- **Oracle 21c XE** installed and running
-- **Postman** or **cURL** for API testing
-
-### 1. Database Setup
-
-Execute the SQL script as `SYSTEM` user in Oracle:
-
-```bash
-sqlplus system/your_password@localhost:1521/XE
-@database/01-create-schemas.sql
-```
-
-This will create 6 schemas:
-- `TOYCELL_AUTH`
-- `TOYCELL_ACCOUNT`
-- `TOYCELL_BALANCE`
-- `TOYCELL_FEE`
-- `TOYCELL_TRANSFER`
-- `TOYCELL_TRANSACTION`
-
-### 2. Build the Project
-
-```bash
-cd C:\projects\toycell-be
-.\gradlew.bat clean build
-```
-
-### 3. Run Services
-
-**Option A: Run individually**
-
-```bash
-# Terminal 1 - Auth Service
-.\gradlew.bat :service-auth:bootRun
-
-# Terminal 2 - Account Service
-.\gradlew.bat :service-account:bootRun
-
-# Terminal 3 - API Gateway
-.\gradlew.bat :api-gateway:bootRun
-```
-
-**Option B: Run all via IDE**
-- Open project in IntelliJ IDEA
-- Run each `*Application.java` file
-
----
-
-## 🧪 Testing with Postman
-
-### 1. Register a User
-
-```http
-POST http://localhost:8080/api/auth/register
-Content-Type: application/json
-
+// POST /api/auth/login
 {
-  "username": "johndoe",
-  "email": "john@example.com",
-  "password": "password123"
+  "email": "test@example.com",
+  "password": "Test123!"
 }
 ```
 
@@ -278,226 +67,726 @@ Content-Type: application/json
 ```json
 {
   "success": true,
-  "message": "User registered successfully",
   "data": {
     "token": "eyJhbGciOiJIUzI1NiJ9...",
     "type": "Bearer",
     "expiresIn": 86400,
     "userId": 1,
-    "username": "johndoe",
-    "email": "john@example.com"
-  },
+    "username": "testuser",
+    "email": "test@example.com"
+  }
+}
+```
+
+---
+
+### 👤 Service-Account (Port 8082)
+**Görev**: Kullanıcı profil yönetimi ve KYC bilgileri
+
+| Method | Endpoint | Açıklama | Auth Gerekli |
+|--------|----------|----------|--------------|
+| POST | `/api/profile` | Profil oluşturma | ✅ |
+| GET | `/api/profile/me` | Kendi profilini görüntüleme | ✅ |
+| PUT | `/api/profile/me` | Profil güncelleme | ✅ |
+| GET | `/actuator/health` | Servis sağlık kontrolü | ❌ |
+
+**Request Örneği:**
+
+```json
+// POST /api/profile
+{
+  "firstName": "Ahmet",
+  "lastName": "Yılmaz",
+  "phoneNumber": "+905551234567",
+  "identityNumber": "12345678901",
+  "birthDate": "1990-05-15"
+}
+```
+
+**Not**: `phoneNumber` ve `identityNumber` AES-256 ile şifrelenerek saklanır.
+
+---
+
+### 💰 Service-Balance (Port 8083)
+**Görev**: Cüzdan yönetimi ve bakiye işlemleri
+
+| Method | Endpoint | Açıklama | Auth Gerekli |
+|--------|----------|----------|--------------|
+| GET | `/api/wallets/my` | Kullanıcının tüm cüzdanlarını listele | ✅ |
+| GET | `/api/wallets/my/{currency}` | Belirli para birimindeki cüzdan | ✅ |
+| POST | `/api/wallets/deposit` | Para yatırma | ✅ |
+| POST | `/api/wallets/withdraw` | Para çekme | ✅ |
+| GET | `/api/wallets/internal/{walletId}` | İç servis çağrısı (internal) | ✅ |
+| GET | `/actuator/health` | Servis sağlık kontrolü | ❌ |
+
+**Request Örnekleri:**
+
+```json
+// POST /api/wallets/deposit
+{
+  "walletId": 1,
+  "amount": 1000.00,
+  "currency": "TRY",
+  "description": "Maaş yatırımı"
+}
+
+// POST /api/wallets/withdraw
+{
+  "walletId": 1,
+  "amount": 500.00,
+  "currency": "TRY",
+  "description": "ATM'den çekim"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "userId": 1,
+    "currency": "TRY",
+    "balance": 1500.00,
+    "active": true,
+    "createdAt": "2026-02-03T10:00:00",
+    "updatedAt": "2026-02-03T14:30:00"
+  }
+}
+```
+
+---
+
+### 💵 Service-Fee (Port 8084)
+**Görev**: Komisyon kuralları ve hesaplama
+
+| Method | Endpoint | Açıklama | Auth Gerekli |
+|--------|----------|----------|--------------|
+| POST | `/api/fees/rules` | Yeni komisyon kuralı oluştur | ✅ (Admin) |
+| GET | `/api/fees/rules` | Tüm kuralları listele | ✅ |
+| GET | `/api/fees/rules/{id}` | Belirli kuralı getir | ✅ |
+| PUT | `/api/fees/rules/{id}` | Kural güncelle | ✅ (Admin) |
+| GET | `/api/fees/calculate?amount={amount}&currency={currency}&type={type}` | Komisyon hesapla | ✅ |
+| GET | `/actuator/health` | Servis sağlık kontrolü | ❌ |
+
+**Request Örneği:**
+
+```json
+// POST /api/fees/rules
+{
+  "transactionType": "TRANSFER",
+  "currency": "TRY",
+  "feeType": "PERCENTAGE",
+  "feeValue": 0.5,
+  "minFee": 1.0,
+  "maxFee": 10.0,
+  "active": true
+}
+```
+
+**Komisyon Hesaplama:**
+```
+GET /api/fees/calculate?amount=500&currency=TRY&type=TRANSFER
+
+Response:
+{
+  "success": true,
+  "data": {
+    "amount": 500.00,
+    "feeAmount": 2.50,
+    "totalAmount": 502.50,
+    "currency": "TRY",
+    "appliedRule": {
+      "feeType": "PERCENTAGE",
+      "feeValue": 0.5
+    }
+  }
+}
+```
+
+---
+
+### 🔄 Service-Transfer (Port 8087)
+**Görev**: Kullanıcılar arası para transferi orkestasyonu
+
+| Method | Endpoint | Açıklama | Auth Gerekli |
+|--------|----------|----------|--------------|
+| POST | `/api/transfers` | Para transferi yap | ✅ |
+| GET | `/api/transfers/my` | Transfer geçmişim | ✅ |
+| GET | `/api/transfers/{id}` | Transfer detayı | ✅ |
+| GET | `/actuator/health` | Servis sağlık kontrolü | ❌ |
+
+**Request Örneği:**
+
+```json
+// POST /api/transfers
+{
+  "senderWalletId": 1,
+  "receiverWalletId": 2,
+  "amount": 500.00,
+  "currency": "TRY",
+  "description": "Borç ödeme"
+}
+```
+
+**Transfer İşlem Akışı:**
+1. ✅ Gönderen cüzdanı doğrula
+2. ✅ Alıcı cüzdanı doğrula
+3. 💵 Komisyon hesapla
+4. 💸 Gönderende para çek (withdraw)
+5. 💰 Alıcıya para yatır (deposit)
+6. 📝 Transaction kayıtları oluştur
+7. ❌ Hata durumunda manuel rollback
+
+---
+
+### 📜 Service-Transaction (Port 8086)
+**Görev**: Tüm işlem kayıtları ve geçmiş
+
+| Method | Endpoint | Açıklama | Auth Gerekli |
+|--------|----------|----------|--------------|
+| POST | `/api/transactions` | Yeni transaction kaydı | ✅ (Internal) |
+| GET | `/api/transactions/my` | Kendi işlem geçmişim | ✅ |
+| GET | `/api/transactions/my?page=0&size=20` | Sayfalı işlem geçmişi | ✅ |
+| GET | `/api/transactions/{id}` | Belirli transaction detayı | ✅ |
+| GET | `/actuator/health` | Servis sağlık kontrolü | ❌ |
+
+**Response Örneği:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "content": [
+      {
+        "id": 1,
+        "userId": 1,
+        "walletId": 1,
+        "type": "DEPOSIT",
+        "amount": 1000.00,
+        "currency": "TRY",
+        "balanceBefore": 0.00,
+        "balanceAfter": 1000.00,
+        "description": "Para yatırma",
+        "createdAt": "2026-02-03T10:00:00"
+      }
+    ],
+    "page": 0,
+    "size": 20,
+    "totalElements": 1,
+    "totalPages": 1
+  }
+}
+```
+
+---
+
+### 🌐 API Gateway (Port 8080)
+**Görev**: Tüm servislere tek giriş noktası
+
+API Gateway, tüm istekleri ilgili mikroservislere yönlendirir:
+
+```
+http://localhost:8080/api/auth/*      → service-auth:8081
+http://localhost:8080/api/profile/*   → service-account:8082
+http://localhost:8080/api/wallets/*   → service-balance:8083
+http://localhost:8080/api/fees/*      → service-fee:8084
+http://localhost:8080/api/transfers/* → service-transfer:8087
+http://localhost:8080/api/transactions/* → service-transaction:8086
+```
+
+---
+
+## 🗂️ Ortak Modüller
+
+### 📦 common-domain
+Tüm servislerde kullanılan ortak domain sınıfları:
+
+- `BaseEntity` - Temel entity sınıfı (id, createdAt, updatedAt)
+- `Currency` - Para birimi enum (TRY, USD, EUR)
+- `TransactionType` - İşlem tipi enum (DEPOSIT, WITHDRAW, TRANSFER)
+- `ApiResponse<T>` - Standart API yanıt wrapper'ı
+
+### 🔒 common-encrypt
+AES-256-CBC şifreleme yardımcıları:
+
+- `AesEncryptionUtil` - Şifreleme/deşifreleme işlemleri
+- `EncryptedStringConverter` - JPA @Convert desteği
+
+**Şifrelenen Alanlar:**
+- TC Kimlik No (identityNumber)
+- Telefon Numarası (phoneNumber)
+
+### ⚠️ common-exception
+Global hata yönetimi:
+
+- `GlobalExceptionHandler` - Tüm servisler için merkezi exception handler
+- `BusinessException` - İş kuralı hataları
+- `ResourceNotFoundException` - Kaynak bulunamadı hataları
+- `ValidationException` - Validasyon hataları
+- `UnauthorizedException` - Yetkilendirme hataları
+
+**Standart Hata Yanıtı:**
+```json
+{
+  "success": false,
+  "errorCode": "WALLET_001",
+  "message": "Insufficient balance",
+  "details": "Requested: 1000.00 TRY, Available: 500.00 TRY",
+  "validationErrors": null,
   "timestamp": "2026-02-03T14:30:00"
 }
 ```
 
-### 2. Login
+---
 
-```http
-POST http://localhost:8080/api/auth/login
-Content-Type: application/json
+## 🚀 Kurulum ve Çalıştırma
 
-{
-  "email": "john@example.com",
-  "password": "password123"
-}
+### 1️⃣ Gereksinimler
+
+- ☕ **Java 17** (Amazon Corretto önerilir)
+- 🗄️ **Oracle 21c XE**
+- 🔧 **Gradle** (wrapper ile birlikte gelir)
+- 🛠️ **DBeaver** (veritabanı yönetimi için)
+- 📮 **Postman** (API testleri için)
+
+### 2️⃣ Veritabanı Kurulumu
+
+DBeaver'da **SYSTEM** kullanıcısı ile bağlanın ve şu SQL'leri çalıştırın:
+
+```sql
+-- Auth Servisi
+CREATE USER TOYCELL_AUTH IDENTIFIED BY "Auth2026!";
+GRANT CONNECT, RESOURCE TO TOYCELL_AUTH;
+GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE VIEW TO TOYCELL_AUTH;
+ALTER USER TOYCELL_AUTH QUOTA UNLIMITED ON USERS;
+
+-- Account Servisi
+CREATE USER TOYCELL_ACCOUNT IDENTIFIED BY "Account2026!";
+GRANT CONNECT, RESOURCE TO TOYCELL_ACCOUNT;
+GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE VIEW TO TOYCELL_ACCOUNT;
+ALTER USER TOYCELL_ACCOUNT QUOTA UNLIMITED ON USERS;
+
+-- Balance Servisi
+CREATE USER TOYCELL_BALANCE IDENTIFIED BY "Balance2026!";
+GRANT CONNECT, RESOURCE TO TOYCELL_BALANCE;
+GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE VIEW TO TOYCELL_BALANCE;
+ALTER USER TOYCELL_BALANCE QUOTA UNLIMITED ON USERS;
+
+-- Fee Servisi
+CREATE USER TOYCELL_FEE IDENTIFIED BY "Fee2026!";
+GRANT CONNECT, RESOURCE TO TOYCELL_FEE;
+GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE VIEW TO TOYCELL_FEE;
+ALTER USER TOYCELL_FEE QUOTA UNLIMITED ON USERS;
+
+-- Transaction Servisi
+CREATE USER TOYCELL_TRANSACTION IDENTIFIED BY "Transaction2026!";
+GRANT CONNECT, RESOURCE TO TOYCELL_TRANSACTION;
+GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE VIEW TO TOYCELL_TRANSACTION;
+ALTER USER TOYCELL_TRANSACTION QUOTA UNLIMITED ON USERS;
 ```
 
-### 3. Create Profile (with JWT token)
+**Not**: Transfer servisi kendi tablosu olmadığı için schema oluşturmaya gerek yoktur.
 
-```http
-POST http://localhost:8080/api/profiles
-Authorization: Bearer <your-jwt-token>
-Content-Type: application/json
+### 3️⃣ Environment Variables
 
-{
-  "firstName": "John",
-  "lastName": "Doe",
-  "identityNumber": "12345678901",
-  "phoneNumber": "+905551234567",
-  "birthDate": "1990-01-15"
-}
+`.env.example` dosyasını `.env` olarak kopyalayın:
+
+```cmd
+copy .env.example .env
 ```
 
-**Note:** `identityNumber` and `phoneNumber` will be **encrypted** in the database using AES-256-CBC.
+`.env` dosyasını düzenleyin:
 
-### 4. Get My Profile
+```properties
+# Veritabanı Şifreleri
+DB_PASSWORD_AUTH=Auth2026!
+DB_PASSWORD_ACCOUNT=Account2026!
+DB_PASSWORD_BALANCE=Balance2026!
+DB_PASSWORD_FEE=Fee2026!
+DB_PASSWORD_TRANSACTION=Transaction2026!
 
-```http
-GET http://localhost:8080/api/profiles/me
-Authorization: Bearer <your-jwt-token>
+# JWT Secret (En az 256 bit)
+JWT_SECRET_KEY=YourSuperSecretJWTKeyAtLeast32CharsLong123456789
+
+# Şifreleme Anahtarı (Tam 32 karakter)
+ENCRYPTION_SECRET_KEY=YourEncryptionKey32Bytes_____
+```
+
+### 4️⃣ Servisleri Başlatma
+
+**launcher.bat** kullanarak:
+
+```cmd
+launcher.bat
+```
+
+Menüden seçenekler:
+- `1` - Auth servisini başlat
+- `2` - Account servisini başlat
+- `3` - Balance servisini başlat
+- `4` - Fee servisini başlat
+- `5` - Transaction servisini başlat
+- `6` - Transfer servisini başlat
+- `7` - API Gateway'i başlat
+- `8` - Tüm servisleri başlat ⭐
+- `0` - Çıkış
+
+**Veya manuel olarak:**
+
+```cmd
+# Terminal 1
+gradlew :service-auth:bootRun
+
+# Terminal 2
+gradlew :service-account:bootRun
+
+# Terminal 3
+gradlew :service-balance:bootRun
+
+# Terminal 4
+gradlew :service-fee:bootRun
+
+# Terminal 5
+gradlew :service-transaction:bootRun
+
+# Terminal 6
+gradlew :service-transfer:bootRun
+
+# Terminal 7
+gradlew :api-gateway:bootRun
+```
+
+### 5️⃣ Sağlık Kontrolü
+
+Tüm servislerin çalıştığından emin olun:
+
+```bash
+curl http://localhost:8081/actuator/health
+curl http://localhost:8082/actuator/health
+curl http://localhost:8083/actuator/health
+curl http://localhost:8084/actuator/health
+curl http://localhost:8086/actuator/health
+curl http://localhost:8087/actuator/health
 ```
 
 ---
 
-## 🔒 Security Features
+## 📝 Kullanım Senaryosu (End-to-End)
 
-### 1. Password Security
-- **BCrypt** hashing with salt (10 rounds)
-- Passwords never stored in plain text
+### Adım 1: Kullanıcı Kaydı
 
-### 2. JWT Authentication
-- **Algorithm:** HS256
-- **Expiration:** 24 hours
-- **Claims:** userId, email, username, role
-- Token validated on every protected endpoint
+```bash
+POST http://localhost:8080/api/auth/register
+{
+  "username": "ahmet123",
+  "email": "ahmet@example.com",
+  "password": "Ahmet123!"
+}
+```
+
+**Token'ı kaydedin**: `eyJhbGciOiJIUzI1NiJ9...`
+
+### Adım 2: Profil Oluşturma
+
+```bash
+POST http://localhost:8080/api/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+{
+  "firstName": "Ahmet",
+  "lastName": "Yılmaz",
+  "phoneNumber": "+905551234567",
+  "identityNumber": "12345678901",
+  "birthDate": "1990-05-15"
+}
+```
+
+### Adım 3: Cüzdanları Kontrol Et
+
+```bash
+GET http://localhost:8080/api/wallets/my
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+```
+
+Otomatik olarak TRY, USD, EUR cüzdanları oluşturulur.
+
+### Adım 4: Para Yatır
+
+```bash
+POST http://localhost:8080/api/wallets/deposit
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+{
+  "walletId": 1,
+  "amount": 5000.00,
+  "currency": "TRY",
+  "description": "İlk para yatırma"
+}
+```
+
+### Adım 5: Transfer Yap
+
+```bash
+POST http://localhost:8080/api/transfers
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+{
+  "senderWalletId": 1,
+  "receiverWalletId": 2,
+  "amount": 1000.00,
+  "currency": "TRY",
+  "description": "Arkadaşa transfer"
+}
+```
+
+### Adım 6: İşlem Geçmişi
+
+```bash
+GET http://localhost:8080/api/transactions/my?page=0&size=20
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+```
+
+---
+
+## 🔐 Güvenlik Özellikleri
+
+### 1. JWT Authentication
+- **Algoritma**: HS256
+- **Token Süresi**: 24 saat
+- **Claims**: userId, email, username, role
+- Her korumalı endpoint'te token doğrulama
+
+### 2. Password Security
+- **BCrypt** hashing (10 rounds)
+- Salt otomatik oluşturulur
+- Plain text şifre asla saklanmaz
 
 ### 3. Data Encryption (AES-256-CBC)
-- **Sensitive fields:** TCKN, Phone Number
-- **Algorithm:** AES/CBC/PKCS5Padding
-- **Key Size:** 256 bits
-- **IV:** Random 16-byte IV prepended to ciphertext
-- **Encoding:** Base64
-- **Automatic:** JPA `@Converter` handles encryption/decryption
+- **Şifrelenen Alanlar**: TC Kimlik No, Telefon
+- **IV**: Random 16-byte initialization vector
+- **Encoding**: Base64
+- **JPA Converter**: Otomatik encrypt/decrypt
 
-**Example Database Value:**
+### 4. CORS Policy
+- API Gateway'de merkezi CORS yapılandırması
+- Sadece belirli origin'lere izin
+
+### 5. Input Validation
+- `@Valid` ve `@Validated` annotations
+- Custom validators (TCKN, telefon)
+- SQL injection koruması
+
+---
+
+## 🗄️ Veritabanı Şeması
+
+### USERS (TOYCELL_AUTH)
+```sql
+CREATE TABLE users (
+    id NUMBER PRIMARY KEY,
+    username VARCHAR2(50) UNIQUE NOT NULL,
+    email VARCHAR2(100) UNIQUE NOT NULL,
+    password_hash VARCHAR2(255) NOT NULL,
+    role VARCHAR2(20) DEFAULT 'USER',
+    active NUMBER(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
-// Plain: 12345678901
-// Encrypted: a3F2d1B3ZjRlNS4uLnJhbmRvbUlW...base64data...
+
+### USER_PROFILES (TOYCELL_ACCOUNT)
+```sql
+CREATE TABLE user_profiles (
+    id NUMBER PRIMARY KEY,
+    user_id NUMBER UNIQUE NOT NULL,
+    first_name VARCHAR2(100) NOT NULL,
+    last_name VARCHAR2(100) NOT NULL,
+    identity_number VARCHAR2(500) NOT NULL, -- ENCRYPTED
+    phone_number VARCHAR2(500) NOT NULL,    -- ENCRYPTED
+    birth_date DATE NOT NULL,
+    is_verified NUMBER(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### WALLETS (TOYCELL_BALANCE)
+```sql
+CREATE TABLE wallets (
+    id NUMBER PRIMARY KEY,
+    user_id NUMBER NOT NULL,
+    currency VARCHAR2(3) NOT NULL,
+    balance NUMBER(19,2) DEFAULT 0.00,
+    active NUMBER(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, currency)
+);
+```
+
+### FEE_RULES (TOYCELL_FEE)
+```sql
+CREATE TABLE fee_rules (
+    id NUMBER PRIMARY KEY,
+    transaction_type VARCHAR2(20) NOT NULL,
+    currency VARCHAR2(3) NOT NULL,
+    fee_type VARCHAR2(20) NOT NULL,
+    fee_value NUMBER(19,2) NOT NULL,
+    min_fee NUMBER(19,2),
+    max_fee NUMBER(19,2),
+    active NUMBER(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### TRANSACTIONS (TOYCELL_TRANSACTION)
+```sql
+CREATE TABLE transactions (
+    id NUMBER PRIMARY KEY,
+    user_id NUMBER NOT NULL,
+    wallet_id NUMBER NOT NULL,
+    related_user_id NUMBER,
+    type VARCHAR2(20) NOT NULL,
+    amount NUMBER(19,2) NOT NULL,
+    currency VARCHAR2(3) NOT NULL,
+    balance_before NUMBER(19,2) NOT NULL,
+    balance_after NUMBER(19,2) NOT NULL,
+    reference_id VARCHAR2(100),
+    description VARCHAR2(500),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
 ---
 
-## ⚙️ Configuration
+## 🐛 Sorun Giderme
 
-### Environment Variables (Optional)
+### ❌ "Connection refused" Hatası
 
-You can override default configurations:
-
-```bash
-# JWT Secret (must be 256+ bits)
-JWT_SECRET_KEY=YourCustomSecretKeyHere...
-
-# Encryption Key (must be 32 bytes for AES-256)
-ENCRYPTION_SECRET_KEY=YourCustomEncryptionKey______
-
-# Database Password
-DB_PASSWORD_AUTH=ToyAuth2026!
-```
-
-### application.properties Files
-
-Each service has its own configuration:
-
-```
-service-auth/src/main/resources/application.properties
-service-account/src/main/resources/application.properties
-api-gateway/src/main/resources/application.properties
-```
-
----
-
-## 📊 Database Schema
-
-### service-auth (TOYCELL_AUTH)
-
-**Table: USERS**
-| Column | Type | Description |
-|--------|------|-------------|
-| id | NUMBER | Primary Key |
-| username | VARCHAR2(50) | Unique username |
-| email | VARCHAR2(100) | Unique email |
-| password_hash | VARCHAR2(255) | BCrypt hashed password |
-| role | VARCHAR2(20) | USER / ADMIN |
-| active | NUMBER(1) | Is account active? |
-| created_at | TIMESTAMP | Creation timestamp |
-| updated_at | TIMESTAMP | Last update timestamp |
-
-### service-account (TOYCELL_ACCOUNT)
-
-**Table: USER_PROFILES**
-| Column | Type | Description |
-|--------|------|-------------|
-| id | NUMBER | Primary Key |
-| user_id | NUMBER | FK to auth.users |
-| first_name | VARCHAR2(100) | First name |
-| last_name | VARCHAR2(100) | Last name |
-| identity_number | VARCHAR2(500) | **Encrypted** TCKN |
-| phone_number | VARCHAR2(500) | **Encrypted** phone |
-| birth_date | DATE | Date of birth |
-| is_verified | NUMBER(1) | Is profile verified? |
-| created_at | TIMESTAMP | Creation timestamp |
-| updated_at | TIMESTAMP | Last update timestamp |
-
----
-
-## 🎯 Development Status
-
-### ✅ Phase 0: Foundation (COMPLETED)
-- [x] Gradle multi-module setup
-- [x] Common libraries structure
-- [x] Git repository initialization
-
-### ✅ Phase 1: Core Libraries (COMPLETED)
-- [x] `common-domain` - BaseEntity, Enums, Response wrappers
-- [x] `common-exception` - GlobalExceptionHandler, ErrorCodes
-- [x] `common-encrypt` - AES-256-CBC encryption with IV
-
-### ✅ Phase 2: Base Services (COMPLETED)
-- [x] `service-auth` - Register, Login, JWT
-- [x] `service-account` - Profile CRUD with encryption
-- [x] `api-gateway` - Route configuration
-
-### 🚧 Phase 3: Business Engine (IN PROGRESS)
-- [ ] `service-balance` - Wallet management
-- [ ] `service-fee` - Fee calculation
-
-### 📋 Phase 4: Orchestration (PLANNED)
-- [ ] `service-transfer` - Transfer orchestration + manual rollback
-- [ ] `service-transaction` - Transaction logging
-
-### 📋 Phase 5: Testing & Documentation (PLANNED)
-- [ ] Postman collection
-- [ ] Swagger UI integration
-- [ ] Integration tests
-
----
-
-## 🐛 Troubleshooting
-
-### Issue: "Connection refused" when calling services
-
-**Solution:** Ensure the service is running on the correct port:
-```bash
+**Çözüm**: Servisin çalıştığından emin olun:
+```cmd
 netstat -ano | findstr :8081
 ```
 
-### Issue: "Invalid or expired token"
+### ❌ "Invalid or expired token"
 
-**Solution:** 
-1. Check that JWT secret keys match in all services
-2. Verify token hasn't expired (24h default)
-3. Ensure `Authorization: Bearer <token>` header is correct
+**Çözüm**: 
+1. Token'ın süresi dolmuş olabilir (24 saat)
+2. Yeni login yapın ve token'ı güncelleyin
+3. `Authorization: Bearer <token>` formatını kontrol edin
 
-### Issue: "Encryption failed"
+### ❌ "Insufficient balance"
 
-**Solution:**
-1. Verify `encryption.secret.key` is set (min 32 chars)
-2. Check that `common-encrypt` is in ComponentScan
-3. Ensure `@Convert(converter = EncryptedStringConverter.class)` is on the field
+**Çözüm**: 
+1. Önce para yatırın (deposit)
+2. Bakiyenizi kontrol edin (`GET /api/wallets/my`)
 
----
+### ❌ "Encryption failed"
 
-## 📝 License
+**Çözüm**:
+1. `.env` dosyasında `ENCRYPTION_SECRET_KEY` ayarlı mı kontrol edin
+2. Anahtar tam 32 karakter olmalı
 
-This project is created for **educational purposes** as part of an internship program.
+### ❌ "Schema not found"
 
----
-
-## 👥 Contributors
-
-- **Developer:** Intern at [Company Name]
-- **Mentor:** [Mentor Name]
-- **AI Assistant:** GitHub Copilot
+**Çözüm**:
+1. Oracle'da schema'ların oluşturulduğunu kontrol edin
+2. DBeaver'da bağlantıları test edin
 
 ---
 
-## 📞 Contact
+## 📚 Dokümantasyon
 
-For questions or issues, please create an issue in the repository or contact the development team.
+Daha detaylı bilgi için `docs/` klasörüne bakın:
+
+- `01-API-ENDPOINTS-DOCUMENTATION.md` - Tüm endpoint detayları
+- `02-PROJECT-STRUCTURE-OVERVIEW.md` - Proje yapısı
+- `03-SERVICE-AUTH-DETAILS.md` - Auth servisi detayları
+- `04-SERVICE-ACCOUNT-DETAILS.md` - Account servisi detayları
+- `05-SERVICES-BALANCE-FEE-TRANSACTION-TRANSFER.md` - Diğer servisler
+- `06-SPRING-BOOT-STRUCTURES.md` - Spring Boot yapıları
 
 ---
 
-**Last Updated:** 2026-02-03  
-**Version:** 1.0-SNAPSHOT  
-**Status:** 🚧 Active Development
+## 📊 Teknoloji Stack'i
+
+| Katman | Teknoloji | Versiyon | Açıklama |
+|--------|-----------|----------|----------|
+| **Language** | Java | 17 | Amazon Corretto |
+| **Framework** | Spring Boot | 3.2.2 | Ana framework |
+| **Gateway** | Spring Cloud Gateway | 2023.0.0 | API Gateway |
+| **Communication** | OpenFeign | 4.1.0 | Servisler arası iletişim |
+| **Security** | Spring Security | 6.2.1 | Kimlik doğrulama |
+| **JWT** | JJWT | 0.12.3 | Token yönetimi |
+| **Database** | Oracle | 21c XE | İlişkisel veritabanı |
+| **ORM** | Spring Data JPA | 3.2.2 | Veri erişim katmanı |
+| **Encryption** | AES-256-CBC | - | Veri şifreleme |
+| **Build Tool** | Gradle | 8.x | Proje yönetimi |
+| **Utilities** | Lombok | 1.18.30 | Boilerplate azaltma |
+
+---
+
+## 🎯 Geliştirme Durumu
+
+### ✅ Tamamlanan Fazlar
+
+- [x] **Faz 0**: Proje yapısı ve Gradle multi-module setup
+- [x] **Faz 1**: Ortak kütüphaneler (domain, exception, encrypt)
+- [x] **Faz 2**: Auth ve Account servisleri
+- [x] **Faz 3**: Balance servisi ve temel cüzdan işlemleri
+- [x] **Faz 4**: Fee servisi ve komisyon kuralları
+- [x] **Faz 5**: Transaction servisi ve işlem kayıtları
+- [x] **Faz 6**: Transfer servisi ve orkestrasyon
+
+### 🚧 Devam Eden Çalışmalar
+
+- [ ] API Gateway routing optimizasyonu
+- [ ] Swagger/OpenAPI dokümantasyonu
+- [ ] Unit ve Integration testleri
+- [ ] Docker containerization
+- [ ] Monitoring ve logging (ELK Stack)
+
+### 📋 Gelecek Özellikler
+
+- [ ] Scheduled jobs (günlük rapor, otomatik komisyon hesaplama)
+- [ ] Webhook sistemi (transfer bildirimleri)
+- [ ] Multi-currency exchange rate servisi
+- [ ] Admin panel için ayrı servis
+- [ ] Rate limiting ve throttling
+
+---
+
+## 👥 Katkıda Bulunanlar
+
+- **Geliştirici**: Stajyer Yazılımcı
+- **Mentor**: Proje Danışmanı
+- **AI Asistan**: GitHub Copilot
+
+---
+
+## 📞 İletişim ve Destek
+
+Sorularınız için:
+- 📧 Email: support@toycell.com
+- 🐛 Issue: GitHub Issues
+- 📖 Wiki: GitHub Wiki
+
+---
+
+## ⚖️ Lisans
+
+Bu proje **eğitim amaçlı** geliştirilmiştir.
+
+---
+
+**Son Güncelleme**: 5 Şubat 2026  
+**Versiyon**: 1.0-SNAPSHOT  
+**Durum**: 🚀 Aktif Geliştirme
+
+---
+
+## 🙏 Teşekkürler
+
+Bu projeyi geliştirirken kullanılan açık kaynak topluluğuna ve katkıda bulunanlara teşekkürler!
+
+**Happy Coding! 🚀**
