@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@SequenceGenerator(name = "base_seq_gen", sequenceName = "transactions_seq", allocationSize = 1)
 public class Transaction extends BaseEntity {
 
     @Column(name = "user_id", nullable = false)

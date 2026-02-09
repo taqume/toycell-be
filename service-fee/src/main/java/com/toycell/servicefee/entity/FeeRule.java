@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@SequenceGenerator(name = "base_seq_gen", sequenceName = "fee_rules_seq", allocationSize = 1)
 public class FeeRule extends BaseEntity {
 
     @Enumerated(EnumType.STRING)

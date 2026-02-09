@@ -18,7 +18,7 @@ public class UserProfile extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_profiles_seq_gen")
-    @SequenceGenerator(name = "user_profiles_seq_gen", sequenceName = "user_profiles_seq")
+    @SequenceGenerator(name = "user_profiles_seq_gen", sequenceName = "user_profiles_seq", allocationSize = 1)
     private Long id;
 
     @Column(nullable = false, unique = true, name = "user_id")
