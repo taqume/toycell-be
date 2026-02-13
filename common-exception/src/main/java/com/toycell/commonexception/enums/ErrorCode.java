@@ -10,6 +10,7 @@ public enum ErrorCode {
     USER_ALREADY_EXISTS("AUTH_003", "User already exists"),
     USER_NOT_FOUND("AUTH_004", "User not found"),
     INVALID_CREDENTIALS("AUTH_005", "Invalid email or password"),
+    CAPTCHA_VALIDATION_FAILED("AUTH_006", "CAPTCHA verification failed"),
     
     // Account
     PROFILE_NOT_FOUND("ACC_001", "User profile not found"),

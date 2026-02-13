@@ -2,9 +2,11 @@ package com.toycell.serviceauth.controller;
 
 import com.toycell.commondomain.response.ApiResponse;
 import com.toycell.serviceauth.dto.AuthResponse;
+import com.toycell.serviceauth.dto.CaptchaResponse;
 import com.toycell.serviceauth.dto.LoginRequest;
 import com.toycell.serviceauth.dto.RegisterRequest;
 import com.toycell.serviceauth.service.AuthService;
+import com.toycell.serviceauth.service.CaptchaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,14 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final CaptchaService captchaService;
+
+    @GetMapping("/captcha")
+    public ApiResponse<CaptchaResponse> getCaptcha() {
+        log.info("GET /api/auth/captcha");
+        CaptchaResponse captcha = captchaService.generateCaptcha();
+        return ApiResponse.success("Captcha generated", captcha);
+    }
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
